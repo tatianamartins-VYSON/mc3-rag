@@ -52,7 +52,10 @@ fi
 du -sh models/* 2>/dev/null || true
 
 # 6a. dependências (sem tocar no torch)
+# cópias antigas do hub (ex.: 2.x em outra pasta) têm prioridade sobre a versão fixada
+for _ in 1 2 3; do pip uninstall -y -q huggingface_hub 2>/dev/null || true; done
 pip install -q --no-deps --ignore-installed -r app/requirements.txt
+python3 -c "import huggingface_hub as h; assert h.__version__=='0.35.3', h.__version__"
 python3 -c "import os,torch; assert os.environ.get('ALLOW_CUDA')=='1' or '+rocm' in torch.__version__, 'pip trocou o torch'; print('torch ok:', torch.__version__)"
 
 # 6. corpus de amostra: casos que o zip não carrega
