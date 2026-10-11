@@ -11,7 +11,7 @@ COPY models/ /models/
 
 # --no-deps so pip cannot replace the ROCm torch with a CUDA build.
 COPY app/requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir --no-deps -r /app/requirements.txt \
+RUN pip install --no-cache-dir --no-deps --ignore-installed -r /app/requirements.txt \
  && python3 -c "import torch; v=torch.__version__; print(v); assert '+rocm' in v, 'torch is no longer the ROCm build'"
 
 COPY app/ /app/

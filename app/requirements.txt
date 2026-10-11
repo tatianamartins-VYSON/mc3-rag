@@ -1,5 +1,5 @@
 # Installed with --no-deps (see Dockerfile). torch and PIL come from the base image.
-transformers==4.57.0
+transformers==4.57.1
 tokenizers==0.22.1
 safetensors==0.6.2
 huggingface-hub==0.35.3

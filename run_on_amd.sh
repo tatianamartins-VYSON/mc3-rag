@@ -44,7 +44,7 @@ cd "$DIR"
 echo "== projeto em $PWD (modelos em $BASE/mc3-models)"
 
 # 4. dependências (sem tocar no torch)
-pip install -q --no-deps -r app/requirements.txt
+pip install -q --no-deps --ignore-installed -r app/requirements.txt
 python3 -c "import os,torch; assert os.environ.get('ALLOW_CUDA')=='1' or '+rocm' in torch.__version__, 'pip trocou o torch'; print('torch ok:', torch.__version__)"
 
 # 5. modelos
