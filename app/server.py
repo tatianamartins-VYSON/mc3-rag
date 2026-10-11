@@ -220,6 +220,12 @@ class Engine:
         t0 = time.time()
         keep: list[str] = []
         for f in files:
+            # a file the question itself names ("the production log shows...", "the
+            # datasheet", "the asset label") is a source by definition, even when another
+            # file repeats the fact: never probe it
+            if _named_by_query(query, f):
+                keep.append(f)
+                continue
             if time.time() - t0 > ABLATION_BUDGET_S:
                 keep.append(f)
                 continue
@@ -252,6 +258,24 @@ class Engine:
                 return json.loads(fixed)
             except json.JSONDecodeError:
                 return {}
+
+
+_DOC_WORDS = {"log", "logs", "datasheet", "spec", "specs", "sheet", "spreadsheet", "csv", "xlsx",
+              "roadmap", "plan", "planning", "label", "pinout", "photo", "image", "picture",
+              "ticket", "database", "email", "memo", "report", "manual", "readme", "code", "script"}
+
+
+def _named_by_query(query: str, file: str) -> bool:
+    """True when the question refers to this file by name or by document type."""
+    q = {w for w in re.findall(r"[a-z0-9]+", query.lower()) if len(w) >= 3}
+    parts = [w for w in re.split(r"[/._\-]+", file.lower()) if len(w) >= 3]
+    for w in parts:
+        if w in q:
+            return True
+        # "log" ~ "logged"/"logs", "label" ~ "labels"
+        if w in _DOC_WORDS and any(x.startswith(w) or w.startswith(x) for x in q if len(x) >= 3):
+            return True
+    return False
 
 
 def _norm(s: str) -> str:
