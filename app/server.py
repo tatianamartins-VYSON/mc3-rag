@@ -37,6 +37,7 @@ INDEX_DIR = Path(os.environ.get("MC3_INDEX_DIR", "/app/index"))
 BACKEND = os.environ.get("MC3_BACKEND", "hf")
 LLM_PATH = os.environ.get("MC3_LLM", "/models/llm")
 VLM_PATH = os.environ.get("MC3_VLM", "/models/vlm")
+ABLATION_BUDGET_S = float(os.environ.get("MC3_ABLATION_BUDGET", "18"))
 TOP_K = int(os.environ.get("MC3_TOP_K", "8"))
 
 
@@ -203,7 +204,40 @@ class Engine:
                     break
         if not files:
             return {"answer": "", "citations": [], "confidence": 0.0}
+        files = self._necessary(query, passages, ans, files)
         return {"answer": ans, "citations": files, "confidence": round(conf, 2), "_passages": [p["cid"] for p in passages]}
+
+    def _necessary(self, query: str, passages: list[dict], ans: str, files: list[str]) -> list[str]:
+        """Citation by necessity, tested by ablation.
+
+        For each cited file, ask again WITHOUT that file's passages. If the model still
+        reaches the same value, the file was not necessary and is dropped. The harness
+        scores the exact set, so one extra file costs the whole question. Each probe is one
+        short generation (~1 s); the per-question budget is 30 s.
+        """
+        if len(files) < 2 or os.environ.get("MC3_NO_ABLATION") == "1":
+            return files
+        t0 = time.time()
+        keep: list[str] = []
+        for f in files:
+            if time.time() - t0 > ABLATION_BUDGET_S:
+                keep.append(f)
+                continue
+            rest = [p for p in passages if p["file"] != f]
+            if not rest:
+                keep.append(f)
+                continue
+            try:
+                probe = self._parse_json(self.backend.chat(SYSTEM, build_user(query, rest)))
+                same = _norm(str(probe.get("answer", ""))) == _norm(ans)
+            except Exception as e:  # noqa: BLE001
+                log(f"ablation failed on {f}: {e}")
+                same = False
+            if not same:
+                keep.append(f)
+        # every file was individually redundant (two copies of the same fact): keep the one
+        # the model listed first rather than citing nothing
+        return keep or files[:1]
 
     @staticmethod
     def _parse_json(raw: str) -> dict:
