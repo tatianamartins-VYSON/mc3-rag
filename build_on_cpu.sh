@@ -19,12 +19,18 @@ VLM_ID="${VLM_ID:-Qwen/Qwen2-VL-2B-Instruct}"
 
 echo "== disco disponível"; df -h / | tail -1
 
-# disco extra (volume montado em /mnt/*): docker e modelos vão para lá
+# disco extra (volume montado em /mnt/*): docker, containerd e modelos vão para lá.
+# O Docker 29 guarda imagens em /var/lib/containerd, então os dois diretórios são
+# redirecionados por bind mount (data-root sozinho não basta).
 BIG="$(df -x tmpfs -x overlay --output=target,avail 2>/dev/null | awk 'NR>1 && $1 ~ /^\/mnt\// {print $2, $1}' | sort -rn | head -1 | awk '{print $2}')"
 if [ -n "$BIG" ]; then
   echo "== usando volume extra em $BIG"
-  mkdir -p "$BIG/docker" "$BIG/work" /etc/docker
-  [ -f /etc/docker/daemon.json ] || echo "{\"data-root\": \"$BIG/docker\"}" > /etc/docker/daemon.json
+  systemctl stop docker docker.socket containerd 2>/dev/null || true
+  for d in docker containerd; do
+    mkdir -p "$BIG/$d" "/var/lib/$d"
+    mountpoint -q "/var/lib/$d" || { rm -rf "/var/lib/$d"; mkdir -p "/var/lib/$d"; mount --bind "$BIG/$d" "/var/lib/$d"; }
+  done
+  mkdir -p "$BIG/work"
   WORK="$BIG/work"
 else
   WORK=/root
