@@ -31,7 +31,7 @@ if [ -n "$BIG" ]; then
     mountpoint -q "/var/lib/$d" || { rm -rf "/var/lib/$d"; mkdir -p "/var/lib/$d"; mount --bind "$BIG/$d" "/var/lib/$d"; }
   done
   mkdir -p "$BIG/work"
-  WORK="$BIG/work"
+  WORK="${MC3_WORK:-$BIG/work}"; mkdir -p "$WORK"
 else
   WORK=/root
 fi
