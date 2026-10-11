@@ -19,15 +19,28 @@ VLM_ID="${VLM_ID:-Qwen/Qwen2-VL-2B-Instruct}"
 
 echo "== disco disponível"; df -h / | tail -1
 
+# disco extra (volume montado em /mnt/*): docker e modelos vão para lá
+BIG="$(df -x tmpfs -x overlay --output=target,avail 2>/dev/null | awk 'NR>1 && $1 ~ /^\/mnt\// {print $2, $1}' | sort -rn | head -1 | awk '{print $2}')"
+if [ -n "$BIG" ]; then
+  echo "== usando volume extra em $BIG"
+  mkdir -p "$BIG/docker" "$BIG/work" /etc/docker
+  [ -f /etc/docker/daemon.json ] || echo "{\"data-root\": \"$BIG/docker\"}" > /etc/docker/daemon.json
+  WORK="$BIG/work"
+else
+  WORK=/root
+fi
+
 echo "== 1/6 docker"
 if ! command -v docker >/dev/null 2>&1; then
   apt-get update -qq && apt-get install -y -qq ca-certificates curl git python3 python3-pip >/dev/null
   curl -fsSL https://get.docker.com | sh >/dev/null
 fi
+systemctl restart docker 2>/dev/null || true
 docker --version
+docker info 2>/dev/null | grep -i "docker root dir" || true
 
 echo "== 2/6 código"
-cd /root
+cd "$WORK"
 if [ -d "$DIR" ]; then
   git -C "$DIR" fetch -q origin "$BRANCH" && git -C "$DIR" checkout -q "$BRANCH" && git -C "$DIR" pull -q
 else
