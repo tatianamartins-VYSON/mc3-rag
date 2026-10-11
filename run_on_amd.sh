@@ -17,8 +17,9 @@ VLM_ID="${VLM_ID:-Qwen/Qwen2-VL-2B-Instruct}"
 
 # 1. onde persistir
 if [ -d /persistent ]; then BASE=/persistent; elif [ -d /workspace ]; then BASE=/workspace; else BASE="$HOME"; fi
-echo "== base: $BASE"
-cd "$BASE"
+echo "== base dos modelos: $BASE"
+# volumes de rede (RunPod /workspace) não aceitam chmod: o código fica no disco local
+CODE="$HOME"; mkdir -p "$BASE/mc3-models" && cd "$CODE"
 
 # 2. GPU e torch
 python3 - <<'EOF'
@@ -39,7 +40,8 @@ else
   git clone -q -b "$BRANCH" "$REPO" "$DIR"
 fi
 cd "$DIR"
-echo "== projeto em $PWD"
+[ -e models ] || ln -s "$BASE/mc3-models" models
+echo "== projeto em $PWD (modelos em $BASE/mc3-models)"
 
 # 4. dependências (sem tocar no torch)
 pip install -q --no-deps -r app/requirements.txt
