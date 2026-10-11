@@ -36,7 +36,7 @@ fi
 cd "$DIR"
 
 echo "== 3/6 modelos (~20 GB)"
-python3 -m pip install -q --break-system-packages -U "huggingface_hub[cli]" 2>/dev/null || python3 -m pip install -q -U "huggingface_hub[cli]"
+python3 -m pip install -q --break-system-packages "huggingface_hub[cli]==0.35.3" 2>/dev/null || python3 -m pip install -q "huggingface_hub[cli]==0.35.3"
 export PATH="$HOME/.local/bin:$PATH"
 [ -f models/llm/config.json ] || hf download "$LLM_ID" --local-dir models/llm
 [ -f models/vlm/config.json ] || hf download "$VLM_ID" --local-dir models/vlm

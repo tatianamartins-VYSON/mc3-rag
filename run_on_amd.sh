@@ -43,17 +43,17 @@ cd "$DIR"
 [ -e models ] || ln -s "$BASE/mc3-models" models
 echo "== projeto em $PWD (modelos em $BASE/mc3-models)"
 
-# 4. dependências (sem tocar no torch)
-pip install -q --no-deps --ignore-installed -r app/requirements.txt
-python3 -c "import os,torch; assert os.environ.get('ALLOW_CUDA')=='1' or '+rocm' in torch.__version__, 'pip trocou o torch'; print('torch ok:', torch.__version__)"
-
-# 5. modelos
+# 5. modelos (antes das dependências: a CLI do hub não pode trocar a versão fixada)
 if [ "${SKIP_MODELS:-0}" != "1" ]; then
-  pip install -q -U "huggingface_hub[cli]"
+  pip install -q "huggingface_hub[cli]==0.35.3"
   [ -f models/llm/config.json ] || hf download "$LLM_ID" --local-dir models/llm
   [ -f models/vlm/config.json ] || hf download "$VLM_ID" --local-dir models/vlm
 fi
 du -sh models/* 2>/dev/null || true
+
+# 6a. dependências (sem tocar no torch)
+pip install -q --no-deps --ignore-installed -r app/requirements.txt
+python3 -c "import os,torch; assert os.environ.get('ALLOW_CUDA')=='1' or '+rocm' in torch.__version__, 'pip trocou o torch'; print('torch ok:', torch.__version__)"
 
 # 6. corpus de amostra: casos que o zip não carrega
 sh setup.sh >/dev/null || true
