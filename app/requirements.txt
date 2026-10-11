@@ -1,0 +1,34 @@
+# Installed with --no-deps (see Dockerfile). torch and PIL come from the base image.
+transformers==4.57.0
+tokenizers==0.22.1
+safetensors==0.6.2
+huggingface-hub==0.35.3
+accelerate==1.10.1
+regex==2025.9.18
+filelock==3.19.1
+fsspec==2025.9.0
+packaging==25.0
+pyyaml==6.0.3
+tqdm==4.67.1
+requests==2.32.5
+charset-normalizer==3.4.3
+idna==3.10
+urllib3==2.5.0
+certifi==2025.8.3
+typing-extensions==4.15.0
+numpy==2.3.3
+# vision preprocessing for Qwen2-VL
+qwen-vl-utils==0.0.11
+# document parsers
+pdfplumber==0.11.7
+pdfminer.six==20250506
+pypdfium2==4.30.0
+pypdf==6.1.1
+cryptography==46.0.2
+cffi==2.0.0
+pycparser==2.23
+charset-normalizer==3.4.3
+python-docx==1.2.0
+lxml==6.0.2
+openpyxl==3.1.5
+et-xmlfile==2.0.0
