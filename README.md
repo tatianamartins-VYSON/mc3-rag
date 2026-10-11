@@ -27,17 +27,18 @@ Decisões que protegem a pontuação:
 Modelos (cabem nos 30 GiB disponíveis): `Qwen/Qwen2.5-7B-Instruct` (texto) e
 `Qwen/Qwen2-VL-2B-Instruct` (imagens).
 
-## Validação local sem GPU (já feita)
+## Validação (feita em 11/10/2026)
 
-```
-python3 eval.py --backend stub
-SCORE 80/200
-```
+| Rodada | Onde | Resultado |
+|---|---|---|
+| backend `stub` (sem modelo) | CPU | 80/200: prova o contrato (índice, socket, escrita atômica, walk defensivo) |
+| backend `hf`, 1ª rodada | RunPod A40 48 GB (`ALLOW_CUDA=1`) | 140/200: 3 perguntas com um arquivo a mais na citação |
+| + ablação de citações | idem | 180/200: pergunta 9 perdeu o log que a própria pergunta nomeia |
+| + arquivo nomeado pela pergunta é protegido | idem | **200/200**, índice 167 s, pergunta mais lenta 3,0 s |
 
-O backend `stub` não tem modelo: acerta as 4 perguntas que a recuperação sozinha resolve e
-erra exatamente as que dependem de LLM/VLM (extração de valor, imagens, multi-hop, recuso).
-Serve para provar o contrato: índice persistido, processo novo por pergunta, socket,
-escrita atômica, walk com arquivos quebrados. O resultado real vem da etapa abaixo.
+Citação por necessidade, testada por ablação (`Engine._necessary`): para cada arquivo citado o
+modelo responde de novo sem ele; se chega ao mesmo valor, o arquivo sai. Arquivos que a pergunta
+menciona ("the production log shows…") nunca são removidos.
 
 ## Passo a passo no ambiente da AMD (fazer até 12/10)
 
