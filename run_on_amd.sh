@@ -64,5 +64,11 @@ sh setup.sh >/dev/null || true
 # 7. avaliação real
 export MC3_LLM="$PWD/models/llm" MC3_VLM="$PWD/models/vlm" MC3_BACKEND=hf
 python3 eval.py --backend hf 2>&1 | tee eval_hf.log
+# 8. corpus MAIOR e mais difícil (156 arquivos, 15 perguntas, distratores, cadeias, imagens, armadilhas)
+pip install -q --no-deps reportlab==4.2.5 || true
+python3 tools/hard_corpus.py "$HOME/mc3-hard"
+python3 tools/retrieval_check.py "$HOME/mc3-hard/corpus" "$HOME/mc3-hard/questions.json" 2>/dev/null | tail -20 | tee retrieval_hard.log
+python3 eval.py --backend hf --corpus "$HOME/mc3-hard/corpus" --questions "$HOME/mc3-hard/questions.json" 2>&1 | tee eval_hard.log
+python3 -c "import torch; print('torch no fim:', torch.__version__)" | tee -a eval_hard.log
 echo
-echo "== log salvo em $PWD/eval_hf.log  (mande este arquivo)"
+echo "== logs salvos em $PWD: eval_hf.log (amostra) e eval_hard.log (corpus difícil)  (mande os dois)"

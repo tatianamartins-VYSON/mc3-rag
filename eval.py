@@ -55,7 +55,7 @@ def main() -> int:
         score += pts
         flag = "OK " if pts else ("ans" if not ok_ans else "cit")
         print(f"{flag} {qid} {dt:4.1f}s  got={out['answer']!r} {out['citations']}  want={q['expected_answer']!r} {q['expected_citations']}")
-    print(f"\nSCORE {score}/200   (backend={args.backend}, work={work})")
+    print(f"\nSCORE {score}/{20 * len(qs)}   (backend={args.backend}, work={work})")
     # stop the server we spawned
     try:
         pid = int(subprocess.check_output(["pgrep", "-f", f"server.py"]).split()[0])
